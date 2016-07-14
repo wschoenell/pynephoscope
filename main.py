@@ -144,10 +144,10 @@ class CloudViewMode():
 	def __init__(self, view):
 		self.view = view
 		self.detectors = []
+		self.detectors.append(CDNBRRatio())
 		self.detectors.append(CDRBDifference())
 		self.detectors.append(CDRBRatio())
 		self.detectors.append(CDBRRatio())
-		self.detectors.append(CDNBRRatio())
 		self.detectors.append(CDAdaptive())
 		self.detectors.append(CDMulticolor())
 		self.detectors.append(CDBackground())

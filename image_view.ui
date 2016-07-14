@@ -162,7 +162,7 @@
            <widget class="QComboBox" name="cbAlgorithm">
             <item>
              <property name="text">
-              <string>R-B Difference</string>
+              <string>Normalized B/R Ratio</string>
              </property>
             </item>
             <item>
@@ -177,7 +177,7 @@
             </item>
             <item>
              <property name="text">
-              <string>Normalized B/R Ratio</string>
+              <string>R-B Difference</string>
              </property>
             </item>
             <item>
