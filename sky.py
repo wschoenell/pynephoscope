@@ -40,19 +40,21 @@ class SkyCatalog:
 			self.data = None
 		else:
 			self.ephemerides = [ephem.Venus(), ephem.Mars(), ephem.Jupiter(), ephem.Saturn(), ephem.Moon(), ephem.Sun()]
-			
-			self.data = ascii.read(Configuration.star_catalog_file, guess=False, format='fixed_width_no_header', names=('HR', 'Name', 'DM', 'HD', 'SAO', 'FK5', 'IRflag', 'r_IRflag', 'Multiple', 'ADS', 'ADScomp', 'VarID', 'RAh1900', 'RAm1900', 'RAs1900', 'DE-1900', 'DEd1900', 'DEm1900', 'DEs1900', 'RAh', 'RAm', 'RAs', 'DE-', 'DEd', 'DEm', 'DEs', 'GLON', 'GLAT', 'Vmag', 'n_Vmag', 'u_Vmag', 'B-V', 'u_B-V', 'U-B', 'u_U-B', 'R-I', 'n_R-I', 'SpType', 'n_SpType', 'pmRA', 'pmDE', 'n_Parallax', 'Parallax', 'RadVel', 'n_RadVel', 'l_RotVel', 'RotVel', 'u_RotVel', 'Dmag', 'Sep', 'MultID', 'MultCnt', 'NoteFlag'), col_starts=(0, 4, 14, 25, 31, 37, 41, 42, 43, 44, 49, 51, 60, 62, 64, 68, 69, 71, 73, 75, 77, 79, 83, 84, 86, 88, 90, 96, 102, 107, 108, 109, 114, 115, 120, 121, 126, 127, 147, 148, 154, 160, 161, 166, 170, 174, 176, 179, 180, 184, 190, 194, 196), col_ends=(3, 13, 24, 30, 36, 40, 41, 42, 43, 48, 50, 59, 61, 63, 67, 68, 70, 72, 74, 76, 78, 82, 83, 85, 87, 89, 95, 101, 106, 107, 108, 113, 114, 119, 120, 125, 126, 146, 147, 153, 159, 160, 165, 169, 173, 175, 178, 179, 183, 189, 193, 195, 196))
-			
-			# removed masked rows
-			
-			self.data = self.data[:][~np.ma.getmaskarray(self.data['DE-'])]
-		
+
+			# XEPHEM star catalog files are described on:
+			# http://www.clearskyinstitute.com/xephem/help/xephem.html#mozTocId468501
+			self.data = np.loadtxt(Configuration.star_catalog_file, delimiter=',', usecols=(0,2,3,4), dtype=np.dtype([('name', "S20"), ('ra', "S15"), ("dec", "S15"), ("mag", float)]))
+
+			# get only the first value of each xephem field. values are sepparated by a pipe |
+			for value in ('name', 'ra', 'dec'):
+				self.data[value] = [x.split('|')[0] for x in self.data[value]]
+
 	def setLocation(self, location):
 		self.location = location
-		
+
 	def setTime(self, time):
 		self.time = time
-		
+
 	def calculate(self):
 		ephem_location = ephem.Observer()
 		ephem_location.lat = self.location.latitude.to(u.rad) / u.rad
@@ -66,23 +68,23 @@ class SkyCatalog:
 			self.names = Column([], dtype=np.str)
 			self.vmag = Column([])
 		else:
-			ra = Longitude((self.data['RAh'], self.data['RAm'], self.data['RAs']), u.h)
-			dec = Latitude((np.core.defchararray.add(self.data['DE-'], self.data['DEd'].astype(str)).astype(int), self.data['DEm'], self.data['DEs']), u.deg)
+			ra = Longitude(self.data["ra"], u.h)
+			dec = Latitude(self.data["dec"], u.deg)
 			c = SkyCoord(ra, dec, frame='icrs')
 			altaz = c.transform_to(AltAz(obstime=self.time, location=self.location))
 			self.alt = altaz.alt
 			self.az = altaz.az
 
-			self.names = self.data['Name']
-			self.vmag = self.data['Vmag']
+			self.names = self.data['name']
+			self.vmag = self.data['mag']
 
 		for ephemeris in self.ephemerides:
 			ephemeris.compute(ephem_location)
-			self.vmag = self.vmag.insert(0, ephemeris.mag)
-			self.alt = self.alt.insert(0, (ephemeris.alt.znorm * u.rad).to(u.deg))
-			self.az = self.az.insert(0, (ephemeris.az * u.rad).to(u.deg))
-			self.names = self.names.insert(0, ephemeris.name)
-		
+			self.vmag = np.insert(self.vmag, [0], ephemeris.mag)
+			self.alt = np.insert(self.alt, [0], (ephemeris.alt.znorm * u.rad).to(u.deg))
+			self.az = np.insert(self.az, [0], (ephemeris.az * u.rad).to(u.deg))
+			self.names = np.insert(self.names, [0], ephemeris.name)
+
 		return self.names, self.vmag, self.alt, self.az
 
 	def filter(self, min_alt, max_mag):
