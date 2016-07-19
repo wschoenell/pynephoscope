@@ -359,7 +359,7 @@ class Calibrator:
 		for index, correspondence in enumerate(correspondences):
 			pos[index, :] = correspondence.pos
 			altaz[index, :] = [angle.radian for angle in correspondence.altaz]
-			
+
 		return pos, altaz
 	
 	def calibrateExt(self):
@@ -435,7 +435,7 @@ class CalibratorUI:
 		self.sky_window = 'Sky Calibration'
 		self.tb_image_switch = 'image'
 		self.tb_max_mag = 'maximum magnitude'
-		self.save_file_name = 'data'
+		self.save_file_name = Configuration.calibration_file
 		self.selected_star = None
 		self.selected_color = (0, 0, 255)
 		self.marked_color = (0, 255, 0)
@@ -625,7 +625,12 @@ class CalibratorUI:
 				
 			elif k == ord('d'):
 				self.renderCalibrationResult()
-				
+
+			elif k == ord('X'):
+				print 'eXcluded last point'
+				print self.calibrator.getCurrentCorrespondences().pop(-1)
+				self.renderCalibrationResult()
+
 			elif k == ord('s'):
 				self.calibrator.save(self.save_file_name)
 				print('Saved')
