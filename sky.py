@@ -140,9 +140,10 @@ class SkyRenderer:
 		for i in range(len(self.names)):
 			cv2.circle(self.image, (int(self.x[i]), int(self.y[i])), int(7 - self.vmag[i]), 255, -1)
 
-			if self.vmag[i] < 1 and not np.ma.is_masked(self.names[i]):
-				cv2.putText(self.image, self.names[i],(int(self.x[i]) + 6, int(self.y[i])), self.font, 1, 150)
-		
+			if self.vmag[i] < 2 and not np.ma.is_masked(self.names[i]):
+				cv2.putText(self.image, self.names[i],(int(self.x[i]) + 6, int(self.y[i])), self.font, .6, 150)
+
+
 		return self.image
 	
 	def findStar(self, x, y, radius):
@@ -168,7 +169,7 @@ class SkyRenderer:
 if __name__ == '__main__':
 	import sys
 	window = 'Stars'
-	size = 1024
+	size = 768
 
 	location = EarthLocation(lat=Configuration.latitude, lon=Configuration.longitude, height=Configuration.elevation)
 	time = Time.now()

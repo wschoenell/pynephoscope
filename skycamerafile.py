@@ -27,7 +27,7 @@ class SkyCameraFile:
 	@staticmethod
 	def glob(path):
 		files = glob.glob(os.path.join(path, "frame_[0-9][0-9][0-9][0-9][0-9]_[0-9][0-9]_[0-9][0-9]_[0-9][0-9].jpg"))
-		files.sort()
+		files.sort(reverse=True)
 		return files
 		
 	@staticmethod
@@ -43,7 +43,7 @@ class SkyCameraFile:
 			hh = int(parts[2])
 			mm = int(parts[3])
 			ss = int(parts[4])
-			mjd = jd + (((ss / 60) + mm) / 60 + hh) / 24
+			mjd = jd + (((ss / 60.) + mm) / 60 + hh) / 24
 			return Time(mjd, format='mjd', scale='utc')
 		else:
 			raise Exception('Invalid filename.')
